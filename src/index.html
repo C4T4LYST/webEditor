@@ -128,14 +128,16 @@
             outline: none;
             font-size: larger;
             padding: 10px 20px;
+            overflow: visible;
         }
 
         .quickMenu .SearchBar .SearchResults {
             position: absolute;
             top: 100%;
-            left: 0px;
-            width: 100%;
+            left: 50%;
+            width: 80%;
             height: auto;
+            transform: translateX(-50%);
             background-color: #121212;
             color: white;
             display: flex;
@@ -143,10 +145,12 @@
             align-items: center;
             justify-content: center;
             padding: 10px 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: .3s all;
         }
+
+        .quickMenu .SearchBar .SearchResults .SearchResult .selected {
+            background-color: #121212a3;
+        }
+
 
     </style>
 </head>
