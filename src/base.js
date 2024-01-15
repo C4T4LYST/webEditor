@@ -1,4 +1,48 @@
-function createLine(element1, element2) {
+
+
+/* */
+function showQuickMenu() {
+    document.getElementById('searchBar').value = '';
+    document.getElementById('quickMenu').classList.add('show');
+}
+function hideQuickMenu() {
+    document.getElementById('quickMenu').classList.remove('show');
+}
+// new
+
+function createGrabber(ParentElement, callbackOnMove) {
+    let grabber = document.createElement('div');
+    grabber.classList.add('grabber');
+    grabber.title = 'Click to move';
+    grabber.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewBox="0 0 448 512"><path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/></svg>';
+    
+    let dragging = false;
+    let dragOffset = { x: 0, y: 0 };
+    grabber.addEventListener('mousedown', (e) => {
+        dragging = true;
+        dragOffset = {
+            x: e.clientX - ParentElement.position.x,
+            y: e.clientY - ParentElement.position.y
+        }
+    });
+
+    grabber.addEventListener('mousemove', (e) => {
+        if(dragging) {
+            ParentElement.setPosition(e.clientX - dragOffset.x, e.clientY - dragOffset.y);
+            if(callbackOnMove != undefined) {
+                callbackOnMove();
+            }
+        }
+    });
+
+    grabber.addEventListener('mouseup', (e) => {
+        dragging = false;
+    });
+    
+    return grabber;
+}
+
+function createLine(element1, position2, color) {
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
     document.getElementById('lines').appendChild(svg);
@@ -8,670 +52,461 @@ function createLine(element1, element2) {
 
     line.setAttribute('x1', element1.getBoundingClientRect().x + element1.getBoundingClientRect().width / 2);
     line.setAttribute('y1', element1.getBoundingClientRect().y + element1.getBoundingClientRect().height / 2);
-    line.setAttribute('x2', element2.getBoundingClientRect().x + element2.getBoundingClientRect().width / 2);
-    line.setAttribute('y2', element2.getBoundingClientRect().y + element2.getBoundingClientRect().height / 2);
+    line.setAttribute('x2', position2.x);
+    line.setAttribute('y2', position2.y);
+    line.style.stroke = color;
 
-
-    return line;
-}
-function resetLine() {
-    document.getElementById('connectorLine').setAttribute('x1', 0);
-    document.getElementById('connectorLine').setAttribute('y1', 0);
-    document.getElementById('connectorLine').setAttribute('x2', 0);
-    document.getElementById('connectorLine').setAttribute('y2', 0);
+    return { line: line, svg: svg };
 }
 
-/* */
-let connections = [];
+let tunnelSegments = [];
+let tunnelConnections = [];
+function addSegment(html) {
+    tunnelSegments.push(html);
+    let connected = false;
+    let grabbing = false;
+    let line = null;
 
-class baseBlock extends HTMLElement{
-    constructor(){
-        super();
+    let removeThis = () => {};
 
-        this.inputs = [];
-        this.outputs = [];
+    function mousedown(e) {
+        if(grabbing) return;
 
-        this.private = { 
-            position: { x: 0, y: 0 },
-            size: { width: 0, height: 0 },
-            function: null,
-            inputside: null,
-            outputside: null,
-            canResize: true
-        };
+        if(html.classList.contains('connected')) return removeThis();
 
-        let inputSide = document.createElement('div');
-        inputSide.classList.add('input-side');
-        this.private.inputside = inputSide;
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        grabbing = true;
 
-        let outputSide = document.createElement('div');
-        outputSide.classList.add('output-side');
-        this.private.outputside = outputSide;
+        line = createLine(html, { x: e.clientX, y: e.clientY }, 'blue');
     }
 
-    setSize(width, height) {
-        console.log(width, height);
-        this.private.size.width = width;
-        this.private.size.height = height;
-        this.style.setProperty('--block-width', width + 'px');
-        this.style.setProperty('--block-height', height + 'px');
+    function mousemove(e) {
+        if(!grabbing) return;
+
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        var svgPoint = line.svg.createSVGPoint();
+        svgPoint.x = e.clientX;
+        svgPoint.y = e.clientY;
+        var newCoords = svgPoint.matrixTransform(line.svg.getScreenCTM().inverse());
+
+        line.line.setAttribute('x2', newCoords.x);
+        line.line.setAttribute('y2', newCoords.y);
     }
 
-    setPosition(x, y) {
-        console.log(x, y);
-        this.private.position.x = x;
-        this.private.position.y = y;
-        
-        this.style.setProperty('--block-pos-x', x + 'px');
-        this.style.setProperty('--block-pos-y', y + 'px');
-    }
+    function mouseup (e) {
+        if(!grabbing) return;
 
-    get position() {
-        return this.private.position;
-    }
-    get size() {
-        return this.private.size;
-    }
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        grabbing = false;
 
-    init(posX, posY, sizeX, sizeY, canResize) {
-        this.setPosition(posX || 100, posY || 100);
-        this.setSize(sizeX || 200, sizeY || 140);
+        document.elementsFromPoint(e.clientX, e.clientY).forEach(element => {
+            if(element.classList.contains('tunnel-point') && element != html && !html.classList.contains('connected')
+                && !element.classList.contains('connected')) {
 
-        this.private.canResize = canResize == undefined ? true : canResize;
-    }
+                console.log('New connection!');
 
-    setFunction(func) {
-        this.private.function = func;
+                grabbing = false;
+                var svgPoint = line.svg.createSVGPoint();
+                svgPoint.x = element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2;
+                svgPoint.y = element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2;
+                var newCoords = svgPoint.matrixTransform(line.svg.getScreenCTM().inverse());
+                line.line.setAttribute('x2', newCoords.x);
+                line.line.setAttribute('y2', newCoords.y);
 
-        let funcasstring = func.toString();
-        let funcname = funcasstring.substring(funcasstring.indexOf(' ') + 1, funcasstring.indexOf('('));
-        let funcargs = funcasstring.substring(funcasstring.indexOf('(') + 1, funcasstring.indexOf(')'));
+                element.classList.add('connected');
+                html.classList.add('connected');
 
-        let args = funcargs.split(',');
-        args.forEach(element => {
-            this.addInput(element);
+                tunnelConnections.push({ from: html, to: element, line: line });
+            }
         });
 
-        this.addOutput('out');
-    }
-
-    addInput(name, id) {
-        if(id == undefined) {
-            id = Math.round(Math.random() * 1000000000);
+        if(!html.classList.contains('connected')) {
+            document.getElementById('lines').removeChild(line.svg);
+            line = null;
         }
-        
-        let input = document.createElement('div');
-        input.classList.add('block-input');
-
-        let targetPoint = document.createElement('div');
-        targetPoint.classList.add('target-point');
-        targetPoint.id = 'tp_' + id;
-        input.appendChild(targetPoint);
-
-        let tx = document.createElement('p');
-        tx.innerText = name;
-        input.appendChild(tx);
-
-        targetPoint.addEventListener('mousedown', (e) => {
-            console.log('mousedown' + targetPoint.id);
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-
-            selectedTarget = targetPoint;
-            selectedTargetType = 'input';
-
-            selectedTargetLocation.x = targetPoint.getBoundingClientRect().x;
-            selectedTargetLocation.y = targetPoint.getBoundingClientRect().y;
-        });
-
-        targetPoint.addEventListener('mouseup', (e) => {
-            if(selectedTargetType == 'output') {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                connections.push({ from: selectedTarget, to: targetPoint, html: createLine(selectedTarget, targetPoint) });
-                selectedTarget = null;
-                selectedTargetType = null;
-
-                resetLine();
-                //TODO add line
-            }
-        });
-
-        this.private.inputside.appendChild(input);
-        this.inputs.push({ name: name, id: id, element: targetPoint });
     }
 
-    addOutput(name, id) {
-        if(id == undefined) {
-            id = Math.round(Math.random() * 1000000000);
+    html.addEventListener('mousedown', mousedown);
+    document.addEventListener('mousemove', mousemove);
+    document.addEventListener('mouseup', mouseup);
+
+    removeThis = () => {
+        if(html.classList.contains('connected')) {
+            let connection = tunnelConnections.find(connection => connection.from == html || connection.to == html);
+            connection.from.classList.remove('connected');
+            connection.to.classList.remove('connected');
+
+            document.getElementById('lines').removeChild(connection.line.svg);
+
+            tunnelConnections = tunnelConnections.filter(connection => connection.from != html && connection.to != html);
+            tunnelSegments = tunnelSegments.filter(segment => segment != html);
         }
-
-        let output = document.createElement('div');
-        output.classList.add('block-output');
-
-        let targetPoint = document.createElement('div');
-        targetPoint.id = 'tp_' + id;
-        targetPoint.classList.add('target-point');
-        output.appendChild(targetPoint);
-
-        let tx = document.createElement('p');
-        tx.innerText = name;
-        output.appendChild(tx);
-
-        targetPoint.addEventListener('mousedown', (e) => {
-            console.log('mousedown' + targetPoint.id);
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-
-            selectedTarget = targetPoint;
-            selectedTargetType = 'output';
-
-            selectedTargetLocation.x = targetPoint.getBoundingClientRect().x;
-            selectedTargetLocation.y = targetPoint.getBoundingClientRect().y;
-        });
-
-
-        targetPoint.addEventListener('mouseup', (e) => {
-            if(selectedTargetType == 'input') {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                connections.push({ from: selectedTarget, to: targetPoint, html: createLine(selectedTarget, targetPoint) });
-                selectedTarget = null;
-                selectedTargetType = null;
-                resetLine();
-                //TODO add line
-            }
-        });
-
-        this.private.outputside.appendChild(output);
-        this.outputs.push({ name: name, id: id, element: targetPoint });
-    }
-
-    connectedCallback() {
-        this.classList.add('custom-block-base');
-
-        let grabber = document.createElement('div');
-        grabber.classList.add('grabber');
-        grabber.title = 'Click to move';
-        grabber.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/></svg>';
-        this.appendChild(grabber);
-
-        grabber.addEventListener('mousedown', (e) => {
-            this.dragging = true;
-            this.dragOffset = {
-                x: e.clientX - this.position.x,
-                y: e.clientY - this.position.y
-            }
-        });
-
-        grabber.addEventListener('mousemove', (e) => {
-            if(this.dragging) {
-                this.setPosition(e.clientX - this.dragOffset.x, e.clientY - this.dragOffset.y);
-            }
-        });
-                        
-        
-        grabber.addEventListener('mouseup', (e) => {
-            this.dragging = false;
-        });
-
-        if(this.private.canResize) {
-            console.log('can resize');
-            let sizer = document.createElement('div');
-            sizer.classList.add('sizer');
-            sizer.title = 'Click to resize';
-            this.appendChild(sizer);
-
-            sizer.addEventListener('mousedown', (e) => {
-                this.sizing = true;
-                this.sizeOffset = {
-                    x: e.clientX - this.size.width,
-                    y: e.clientY - this.size.height
-                }
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if(this.sizing) {
-                    this.setSize(e.clientX - this.sizeOffset.x, e.clientY - this.sizeOffset.y);
-                }
-            });
-
-            document.addEventListener('mouseup', (e) => {
-                this.sizing = false;
-            });
-        }
-
-
-        this.appendChild(this.private.inputside);
-        this.appendChild(this.private.outputside);
     }
 }
 
+function updateTunnelSegments() {
+    tunnelSegments.forEach(segment => {
+        tunnelConnections.forEach(connection => {
+            if(connection.from == segment) {
+                connection.line.line.setAttribute('x1', segment.getBoundingClientRect().x + segment.getBoundingClientRect().width / 2);
+                connection.line.line.setAttribute('y1', segment.getBoundingClientRect().y + segment.getBoundingClientRect().height / 2);
+            }
+            if(connection.to == segment) {
+                connection.line.line.setAttribute('x2', segment.getBoundingClientRect().x + segment.getBoundingClientRect().width / 2);
+                connection.line.line.setAttribute('y2', segment.getBoundingClientRect().y + segment.getBoundingClientRect().height / 2);
+            }
+        });
+    });
+}
 
+let connectors = [];
+let connectedPoints = [];
+
+let assocs = new Map();
+function getConnectedBlock(element) {
+    let finded = null;
+    connectedPoints.forEach(connection => {
+        if(connection.from == element) {
+            finded = connection.to;
+            return;
+        }
+        if(connection.to == element) {
+            finded = connection.from;
+            return;
+        }
+    });
+
+    return assocs.get(finded);
+}
+
+function addConnector(html, type) {
+    connectors.push(html);
+    let connected = false;
+    let grabbing = false;
+    let line = null;
+
+    let removeThis = () => {};
+
+    function mousedown(e) {
+        if(grabbing) return;
+
+        if(html.classList.contains('connected')) return removeThis();
+
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        grabbing = true;
+
+        line = createLine(html, { x: e.clientX, y: e.clientY }, 'blue');
+    }
+
+    function mousemove(e) {
+        if(!grabbing) return;
+
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        var svgPoint = line.svg.createSVGPoint();
+        svgPoint.x = e.clientX;
+        svgPoint.y = e.clientY;
+        var newCoords = svgPoint.matrixTransform(line.svg.getScreenCTM().inverse());
+
+        line.line.setAttribute('x2', newCoords.x);
+        line.line.setAttribute('y2', newCoords.y);
+    }
+
+    function mouseup (e) {
+        if(!grabbing) return;
+
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        grabbing = false;
+
+        document.elementsFromPoint(e.clientX, e.clientY).forEach(element => {
+            if(element.classList.contains('target-point') && element != html && !html.classList.contains('connected')
+                && !element.classList.contains('connected')) {
+
+                console.log('New connection!');
+
+                grabbing = false;
+                var svgPoint = line.svg.createSVGPoint();
+                svgPoint.x = element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2;
+                svgPoint.y = element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2;
+                var newCoords = svgPoint.matrixTransform(line.svg.getScreenCTM().inverse());
+                line.line.setAttribute('x2', newCoords.x);
+                line.line.setAttribute('y2', newCoords.y);
+
+                element.classList.add('connected');
+                html.classList.add('connected');
+
+                connectedPoints.push({ from: html, to: element, line: line });
+            }
+        });
+
+        if(!html.classList.contains('connected')) {
+            document.getElementById('lines').removeChild(line.svg);
+            line = null;
+        }
+    }
+
+    html.addEventListener('mousedown', mousedown);
+    document.addEventListener('mousemove', mousemove);
+    document.addEventListener('mouseup', mouseup);
+
+    removeThis = () => {
+        if(html.classList.contains('connected')) {
+            let connection = connectedPoints.find(connection => connection.from == html || connection.to == html);
+            connection.from.classList.remove('connected');
+            connection.to.classList.remove('connected');
+
+            document.getElementById('lines').removeChild(connection.line.svg);
+
+            connectedPoints = connectedPoints.filter(connection => connection.from != html && connection.to != html);
+            connectors = connectors.filter(segment => segment != html);
+        }
+    }
+}
+
+function updateConnectors() {
+    connectors.forEach(segment => {
+        connectedPoints.forEach(connection => {
+            if(connection.from == segment) {
+                connection.line.line.setAttribute('x1', segment.getBoundingClientRect().x + segment.getBoundingClientRect().width / 2);
+                connection.line.line.setAttribute('y1', segment.getBoundingClientRect().y + segment.getBoundingClientRect().height / 2);
+            }
+            if(connection.to == segment) {
+                connection.line.line.setAttribute('x2', segment.getBoundingClientRect().x + segment.getBoundingClientRect().width / 2);
+                connection.line.line.setAttribute('y2', segment.getBoundingClientRect().y + segment.getBoundingClientRect().height / 2);
+            }
+        });
+    });
+}
 
 class block extends HTMLElement{
     constructor(){
         super();
 
-        this.inputs = [];
-        this.outputs = [];
+        this._inited = false;
+        this._type = 'base';
+        this._caller = null;
+        this._callfor = null;
+        this._targetPoints = [];
 
-        this.private = { 
-            position: { x: 0, y: 0 },
-            size: { width: 0, height: 0 },
-            function: null,
-            inputside: null,
-            outputside: null
-        };
-
-        let inputSide = document.createElement('div');
-        inputSide.classList.add('input-side');
-        this.private.inputside = inputSide;
-
-        let outputSide = document.createElement('div');
-        outputSide.classList.add('output-side');
-        this.private.outputside = outputSide;
+        this._position = { x: 0, y: 0 };
+        this._size = { width: 0, height: 0 };
     }
 
-    setSize(width, height) {
-        console.log(width, height);
-        this.private.size.width = width;
-        this.private.size.height = height;
-        this.style.setProperty('--block-width', width + 'px');
-        this.style.setProperty('--block-height', height + 'px');
+    set type(value) {
+        this._type = value;
+    }
+    get type() {
+        return this._type;
+    }
+
+    set caller(value) {
+        this._caller = value;
+    }
+    get caller() {
+        return this._caller;
+    }
+
+    set callfor(value) {
+        this._callfor = value;
+    }
+    get callfor() {
+        return this._callfor;
+    }
+
+    set position(value) {
+        this._position = value;
+        this.style.setProperty('--block-pos-x', this._position.x + 'px');
+        this.style.setProperty('--block-pos-y', this._position.y + 'px');
+    }
+    get position() {
+        return this._position;
     }
 
     setPosition(x, y) {
-        console.log(x, y);
-        this.private.position.x = x;
-        this.private.position.y = y;
-        
-        this.style.setProperty('--block-pos-x', x + 'px');
-        this.style.setProperty('--block-pos-y', y + 'px');
+        this._position = { x: x, y: y };
+        this.style.setProperty('--block-pos-x', this._position.x + 'px');
+        this.style.setProperty('--block-pos-y', this._position.y + 'px');
     }
 
-    get position() {
-        return this.private.position;
+    set size(value) {
+        this._size = value;
+        this.style.setProperty('--block-width', this._size.width + 'px');
+        this.style.setProperty('--block-height', this._size.height + 'px');
     }
     get size() {
-        return this.private.size;
+        return this._size;
+    }
+}
+
+class startBlock extends block {
+    constructor() {
+        super();
+        this._settedUp = false;
+        this._type = 'Start';
+    }
+    setUp(positionX, positionY, sizeX, sizeY) {
+        this.position = { x: positionX, y: positionY };
+        this.size = { width: sizeX, height: sizeY };
+        this._settedUp = true;
     }
 
-    setFunction(func) {
-        this.private.function = func;
+    run() {
 
-        let funcasstring = func.toString();
-        let funcname = funcasstring.substring(funcasstring.indexOf(' ') + 1, funcasstring.indexOf('('));
-        let funcargs = funcasstring.substring(funcasstring.indexOf('(') + 1, funcasstring.indexOf(')'));
-
-        let args = funcargs.split(',');
-        args.forEach(element => {
-            this.addInput(element);
-        });
-
-        this.addOutput('out');
     }
 
-    addInput(name, id) {
-        if(id == undefined) {
-            id = Math.round(Math.random() * 1000000000);
+    connectedCallback() {
+        this.classList.add('event-block');
+        this.classList.add('simple-block');
+        if(!this._settedUp) {
+            this.setUp(100, 100, 100, 100);
         }
-        
+
+        let grabber = createGrabber(this, updateTunnelSegments);
+        grabber.style.transform = 'rotateZ(-45deg)';
+        this.appendChild(grabber);
+
+        let title = document.createElement('h2');
+        title.innerText = 'Start';
+        this.appendChild(title);
+
+        let tunnelPoint = document.createElement('div');
+        tunnelPoint.classList.add('tunnel-point');
+        this.appendChild(tunnelPoint);
+        addSegment(tunnelPoint);
+    }
+}
+customElements.define('start-event-block', startBlock);
+
+class ioblock extends block {
+    constructor() {
+        super();
+        this._settedUp = false;
+        this._type = 'IO';
+
+        this._inputs = [];
+        this._outputs = [];
+
+        this._inputSide = document.createElement('div');
+        this._outputSide = document.createElement('div');
+    }
+
+    addInput(name) {
         let input = document.createElement('div');
         input.classList.add('block-input');
 
         let targetPoint = document.createElement('div');
         targetPoint.classList.add('target-point');
-        targetPoint.id = 'tp_' + id;
+        targetPoint.classList.add('input');
         input.appendChild(targetPoint);
 
         let tx = document.createElement('p');
         tx.innerText = name;
         input.appendChild(tx);
 
-        targetPoint.addEventListener('mousedown', (e) => {
-            console.log('mousedown' + targetPoint.id);
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        this._inputSide.appendChild(input);
+        this._inputs.push({ name: name, element: targetPoint });
+        addConnector(targetPoint, 'input');
 
-            selectedTarget = targetPoint;
-            selectedTargetType = 'input';
-
-            selectedTargetLocation.x = targetPoint.getBoundingClientRect().x;
-            selectedTargetLocation.y = targetPoint.getBoundingClientRect().y;
-        });
-
-        targetPoint.addEventListener('mouseup', (e) => {
-            if(selectedTargetType == 'output') {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                connections.push({ from: selectedTarget, to: targetPoint, html: createLine(selectedTarget, targetPoint) });
-                selectedTarget = null;
-                selectedTargetType = null;
-
-                resetLine();
-                //TODO add line
-            }
-        });
-
-        this.private.inputside.appendChild(input);
-        this.inputs.push({ name: name, id: id, element: targetPoint });
+        assocs.set(targetPoint, this);
     }
 
-    addOutput(name, id) {
-        if(id == undefined) {
-            id = Math.round(Math.random() * 1000000000);
-        }
-
+    addOutput(name) {
         let output = document.createElement('div');
         output.classList.add('block-output');
-
+        
         let targetPoint = document.createElement('div');
-        targetPoint.id = 'tp_' + id;
         targetPoint.classList.add('target-point');
+        targetPoint.classList.add('output');
         output.appendChild(targetPoint);
 
         let tx = document.createElement('p');
         tx.innerText = name;
         output.appendChild(tx);
 
-        targetPoint.addEventListener('mousedown', (e) => {
-            console.log('mousedown' + targetPoint.id);
-            e.stopPropagation();
-            e.stopImmediatePropagation();
+        this._outputSide.appendChild(output);
+        this._outputs.push({ name: name, element: targetPoint });
+        addConnector(targetPoint, 'output');
 
-            selectedTarget = targetPoint;
-            selectedTargetType = 'output';
-
-            selectedTargetLocation.x = targetPoint.getBoundingClientRect().x;
-            selectedTargetLocation.y = targetPoint.getBoundingClientRect().y;
-        });
-
-        targetPoint.addEventListener('mouseup', (e) => {
-            if(selectedTargetType == 'input') {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                connections.push({ from: selectedTarget, to: targetPoint, html: createLine(selectedTarget, targetPoint) });
-                selectedTarget = null;
-                selectedTargetType = null;
-                resetLine();
-
-                //TODO add line
-            }
-        });
-
-        this.private.outputside.appendChild(output);
-        this.outputs.push({ name: name, id: id, element: targetPoint });
+        assocs.set(targetPoint, this);
     }
 
     connectedCallback() {
-        if(JSON.stringify(this.private.size) == JSON.stringify({ width: 0, height: 0 })) {
-            this.setSize(160, 110);
-        }
-        if(JSON.stringify(this.private.position) == JSON.stringify({ x: 0, y: 0 })) {
-            this.setPosition(100, 100);
-        }
+        this.classList.add('io-block');
+        this.classList.add('simple-block');
 
-        let grabber = document.createElement('div');
-        grabber.classList.add('grabber');
-        grabber.title = 'Click to move';
-        grabber.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/></svg>';
+        let grabber = createGrabber(this, updateConnectors);
         this.appendChild(grabber);
 
-        grabber.addEventListener('mousedown', (e) => {
-            this.dragging = true;
-            this.dragOffset = {
-                x: e.clientX - this.position.x,
-                y: e.clientY - this.position.y
-            }
-        });
+        this._inputSide.classList.add('input-side');
+        this.appendChild(this._inputSide);
 
-        document.addEventListener('mousemove', (e) => {
-            if(this.dragging) {
-                this.setPosition(e.clientX - this.dragOffset.x, e.clientY - this.dragOffset.y);
-                connections.forEach(connection => {
-                    this.inputs.map(input => input.element).forEach(element => {
-                        if(element == connection.to) {
-                            connection.html.setAttribute('x2', element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2);
-                            connection.html.setAttribute('y2', element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2);
-                        }
-
-                        if(element == connection.from) {
-                            connection.html.setAttribute('x1', element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2);
-                            connection.html.setAttribute('y1', element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2);
-                        }
-                    })
-
-                    this.outputs.map(input => input.element).forEach(element => {
-                        if(element == connection.to) {
-                            connection.html.setAttribute('x2', element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2);
-                            connection.html.setAttribute('y2', element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2);
-                        }
-
-                        if(element == connection.from) {
-                            connection.html.setAttribute('x1', element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2);
-                            connection.html.setAttribute('y1', element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2);
-                        }
-                    })
-                })
-            }
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            this.dragging = false;
-        });
-
-        let sizer = document.createElement('div');
-        sizer.classList.add('sizer');
-        sizer.title = 'Click to resize';
-        this.appendChild(sizer);
-
-        sizer.addEventListener('mousedown', (e) => {
-            this.sizing = true;
-            this.sizeOffset = {
-                x: e.clientX - this.size.width,
-                y: e.clientY - this.size.height
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if(this.sizing) {
-                this.setSize(e.clientX - this.sizeOffset.x, e.clientY - this.sizeOffset.y);
-            }
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            this.sizing = false;
-        });
-
-
-        this.appendChild(this.private.inputside);
-        this.appendChild(this.private.outputside);
+        this._outputSide.classList.add('output-side');
+        this.appendChild(this._outputSide);
     }
 }
 
-customElements.define('block-element', block);
-
-
-class inBlock extends HTMLElement{
-    constructor(){
+class consoleLogBlock extends ioblock {
+    constructor() {
         super();
-
-        this.outputs = [];
-
-        this.private = { 
-            position: { x: 0, y: 0 },
-            size: { width: 0, height: 0 },
-            value: null,
-            valueType: null,
-            outputside: null
-        };
-
-        let outputSide = document.createElement('div');
-        outputSide.classList.add('output-side');
-        this.private.outputside = outputSide;
+        this._settedUp = false;
     }
-
-    setSize(width, height) {
-        console.log(width, height);
-        this.private.size.width = width;
-        this.private.size.height = height;
-        this.style.setProperty('--block-width', width + 'px');
-        this.style.setProperty('--block-height', height + 'px');
-    }
-
-    setPosition(x, y) {
-        console.log(x, y);
-        this.private.position.x = x;
-        this.private.position.y = y;
-        
-        this.style.setProperty('--block-pos-x', x + 'px');
-        this.style.setProperty('--block-pos-y', y + 'px');
-    }
-
-    get position() {
-        return this.private.position;
-    }
-    get size() {
-        return this.private.size;
-    }
-
-    addOutput(name, id) {
-        if(id == undefined) {
-            id = Math.round(Math.random() * 1000000000);
-        }
-
-        let output = document.createElement('div');
-        output.classList.add('block-output');
-
-        let targetPoint = document.createElement('div');
-        targetPoint.id = 'tp_' + id;
-        targetPoint.classList.add('target-point');
-        output.appendChild(targetPoint);
-
-        let tx = document.createElement('p');
-        tx.innerText = name;
-        output.appendChild(tx);
-
-        targetPoint.addEventListener('mousedown', (e) => {
-            console.log('mousedown' + targetPoint.id);
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-
-            selectedTarget = targetPoint;
-            selectedTargetType = 'output';
-
-            selectedTargetLocation.x = targetPoint.getBoundingClientRect().x;
-            selectedTargetLocation.y = targetPoint.getBoundingClientRect().y;
-        });
-
-        targetPoint.addEventListener('mouseup', (e) => {
-            if(selectedTargetType == 'input') {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                connections.push({ from: selectedTarget, to: targetPoint, html: createLine(selectedTarget, targetPoint) });
-                selectedTarget = null;
-                selectedTargetType = null;
-                resetLine();
-
-                //TODO add line
-            }
-        });
-
-        this.private.outputside.appendChild(output);
-        this.outputs.push({ name: name, id: id, element: targetPoint });
+    setUp(positionX, positionY, sizeX, sizeY) {
+        this.position = { x: positionX, y: positionY };
+        this.size = { width: sizeX, height: sizeY };
+        this._settedUp = true;
     }
 
     connectedCallback() {
-        if(JSON.stringify(this.private.size) == JSON.stringify({ width: 0, height: 0 })) {
-            this.setSize(160, 110);
+        super.connectedCallback();
+        if(!this._settedUp) {
+            this.setUp(100, 100, 230, 110);
         }
-        if(JSON.stringify(this.private.position) == JSON.stringify({ x: 0, y: 0 })) {
-            this.setPosition(100, 100);
-        }
+        
+        let title = document.createElement('h2');
+        title.innerText = 'Console.log';
+        this.appendChild(title);
 
-        let grabber = document.createElement('div');
-        grabber.classList.add('grabber');
-        grabber.title = 'Click to move';
-        grabber.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="16" width="14" viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/></svg>';
-        this.appendChild(grabber);
-
-        grabber.addEventListener('mousedown', (e) => {
-            this.dragging = true;
-            this.dragOffset = {
-                x: e.clientX - this.position.x,
-                y: e.clientY - this.position.y
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if(this.dragging) {
-                this.setPosition(e.clientX - this.dragOffset.x, e.clientY - this.dragOffset.y);
-                connections.forEach(connection => {
-                    this.outputs.map(input => input.element).forEach(element => {
-                        if(element == connection.to) {
-                            connection.html.setAttribute('x2', element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2);
-                            connection.html.setAttribute('y2', element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2);
-                        }
-
-                        if(element == connection.from) {
-                            connection.html.setAttribute('x1', element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2);
-                            connection.html.setAttribute('y1', element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2);
-                        }
-                    })
-                })
-            }
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            this.dragging = false;
-        });
-
-        let sizer = document.createElement('div');
-        sizer.classList.add('sizer');
-        sizer.title = 'Click to resize';
-        this.appendChild(sizer);
-
-        sizer.addEventListener('mousedown', (e) => {
-            this.sizing = true;
-            this.sizeOffset = {
-                x: e.clientX - this.size.width,
-                y: e.clientY - this.size.height
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if(this.sizing) {
-                this.setSize(e.clientX - this.sizeOffset.x, e.clientY - this.sizeOffset.y);
-            }
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            this.sizing = false;
-        });
-
-        this.appendChild(this.private.outputside);
+        this.addInput('text');
         this.addOutput('out');
     }
 }
+customElements.define('console-log-block', consoleLogBlock);
 
-class blockB extends baseBlock {
+class stringInputBlock extends ioblock {
     constructor() {
         super();
+        this._settedUp = false;
+    }
+    setUp(positionX, positionY, sizeX, sizeY) {
+        this.position = { x: positionX, y: positionY };
+        this.size = { width: sizeX, height: sizeY };
+        this._settedUp = true;
     }
 
     connectedCallback() {
-        super.init(100, 100, 200, 140, false);
-
         super.connectedCallback();
-        this.setFunction((a, b) => {
-            return a + b;
-        });
+        if(!this._settedUp) {
+            this.setUp(100, 100, 230, 110);
+        }
+        
+        let title = document.createElement('h2');
+        title.innerText = 'String Input';
+        this.appendChild(title);
+
+        let inputBox = document.createElement('input');
+        inputBox.type = 'text';
+        inputBox.placeholder = 'Text';
+        this.appendChild(inputBox);
+
+        this.addOutput('out');
     }
 
 }
-
-
-customElements.define('block-b', blockB);
-
-customElements.define('block-input', inBlock);
+customElements.define('string-input-block', stringInputBlock);

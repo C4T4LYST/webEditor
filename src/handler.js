@@ -5,12 +5,7 @@ let quickMenu = document.getElementById('quickMenu');
 let quickMenuSearchBar = document.getElementById('searchBar'); 
 let quickMenuSearchResults = document.getElementById('SearchResults');
 
-function showQuickMenu() {
-    quickMenu.classList.add('show');
-}
-function hideQuickMenu() {
-    quickMenu.classList.remove('show');
-}
+
 
 function updateSearch(input) {
     input = input.toLowerCase();
@@ -46,6 +41,9 @@ function updateSearch(input) {
             return true;
         }
     });
+
+    //cap 10 results
+    results = results.slice(0, 10);
 
     quickMenuSearchResults.innerHTML = '';
     searchResults = [];
@@ -114,6 +112,20 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-showQuickMenu();
+
+document.getElementById('Start', () => {
+    let StartEvents = document.querySelectorAll('start-event-block');
+    if(StartEvents.length == 0) {
+        throw new Error('No start event found');
+    }
+    else if(StartEvents.length > 1) {
+        console.error('Multiple start events found');
+    }
+
+    Array.from(StartEvents).forEach(StartEvent => {
+        StartEvent.run();
+    });
+});
 ////////////////////////////////////////////////////////
 });
+

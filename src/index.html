@@ -11,7 +11,7 @@
 
     <script src="searchBar.js"></script>
     <script src="handler.js"></script>
-    <script>
+    <script>/*
         let selectedTarget = null;
         let selectedTargetType = null;
         let selectedTargetLocation = {x: 0, y: 0};
@@ -39,126 +39,17 @@
             line.setAttribute('y1', selectedTargetLocation.y);
         }
 
-        document.addEventListener('mousemove', updateLine);
+        document.addEventListener('mousemove', updateLine);*/
     </script>
     <style>
-        #lines {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            pointer-events: none;
-        }
-        #lines svg {
-            width: 100%;
-            height: 100%;
-            position: absolute; 
-            top: 0px;
-            left: 0px; 
-            pointer-events: none;
-        }
-
         
-        #lines > svg > line {
-            stroke: red;
-            stroke-width: 4;
-        }
-        #connectorLine {
-            stroke: black !important;
-            stroke-width: 4;
-        }
-
-        .handler {
-            position: absolute;
-            top: 0px;
-            left: 30px;
-            width: auto;
-            height: auto;
-            background-color: #121212;
-            color: white;
-        }
-
-        .handler button {
-            font-size: larger;
-            width: auto;
-            height: auto;
-            padding: 10px 20px;
-            background-color: transparent;
-            color: white;
-            border: none;
-            outline: none;
-            cursor: pointer;
-        }
-        .quickMenu {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 100%;
-            height: 100%;
-            background-color: #121212a3;
-            color: white;
-            z-index: 9999;
-            pointer-events: none;
-            opacity: 0;
-            transition: .3s all;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-around;
-        }
-        .quickMenu.show {
-            pointer-events: all;
-            opacity: 1;
-        }
-        .quickMenu .SearchBar {
-            width: 60%;
-            height: 50px;
-            background-color: #121212;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .quickMenu .SearchBar input {
-            width: 100%;
-            height: 100%;
-            background-color: transparent;
-            color: white;
-            border: none;
-            outline: none;
-            font-size: larger;
-            padding: 10px 20px;
-            overflow: visible;
-        }
-
-        .quickMenu .SearchBar .SearchResults {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            width: 80%;
-            height: auto;
-            transform: translateX(-50%);
-            background-color: #121212;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 20px;
-        }
-
-        .quickMenu .SearchBar .SearchResults .SearchResult .selected {
-            background-color: #121212a3;
-        }
-
-
     </style>
 </head>
 <body>
     <div class="Editor">
         <div class="handler">
             <button id="Start">Start</button>
-            <button id="quickBar">GoTo</button>
+            <button onclick="showQuickMenu()" id="quickBar">GoTo</button>
             <button id="createTemp">CreateTemplate</button>
         </div>
         <div class="quickMenu" id= "quickMenu">
@@ -169,7 +60,6 @@
                         <div class="SearchResultTopic">
                             <h2>Topic</h2>
                         <p>Search Results</p>
-                    
                     -->
                 </div>
             </div>
@@ -187,12 +77,7 @@
 
     <script>
         let Editor = document.querySelector('.Editor');
-        Editor.addEventListener('mouseup', () => {
-            if(selectedTarget != null) {
-                selectedTarget = null;
-                resetLine();
-            }
-        })
+        
 /*
         let EditorMoving = false;
         Editor.addEventListener('mousedown', (e) => {
@@ -243,9 +128,9 @@
             }
 
         })
-*/
+*//*
         let blockBA = document.createElement('block-b');
-        Editor.appendChild(blockBA);
+        Editor.appendChild(blockBA);*/
 
         
     </script>

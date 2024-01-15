@@ -7,23 +7,17 @@ function addSearchOption(displayName, searchFunction) {
     searchBarOptions.push({displayName: displayName.toLowerCase(), searchFunction: searchFunction});
 }
 
-addSearchOption('Create start point', () => {});
-addSearchOption('getElementsByName', () => {});
-addSearchOption('getElementsByClassName', () => {});
-addSearchOption('getElementsByTagName', () => {});
-addSearchOption('querySelector', () => {});
-addSearchOption('querySelectorAll', () => {});
-addSearchOption('getElementById', () => {});
+addSearchOption('Create Start event', () => {
+    let startEvent = document.createElement('start-event-block');
+    Editor.appendChild(startEvent);
+});
 
-addSearchOption('getWindowName', () => {});
-addSearchOption('getWindowLocation', () => {});
-addSearchOption('getWindowHistory', () => {});
+addSearchOption('Create Console log', () => {
+    let consoleLog = document.createElement('console-log-block');
+    Editor.appendChild(consoleLog);
+});
 
-addSearchOption('While loop', () => {});
-addSearchOption('For loop', () => {});
-addSearchOption('For in loop', () => {});
-addSearchOption('For of loop', () => {});
-addSearchOption('Do while loop', () => {});
-addSearchOption('Switch statement', () => {});
-addSearchOption('If statement', () => {});
-
+addSearchOption('Create string input', () => {
+    let stringInput = document.createElement('string-input-block');
+    Editor.appendChild(stringInput);
+});

@@ -1,0 +1,171 @@
+
+.custom-block-base {
+    width: var(--block-width);
+    height: var(--block-height);
+
+    top: var(--block-pos-y);
+    left: var(--block-pos-x);
+
+    position: relative;
+    display: block;
+
+    border-radius: 10px;
+    background-color: rgb(120, 120, 120);
+    border: 1px gray solid;
+}
+.custom-block-base > .grabber {
+    left: 50%;
+    top: 0px;
+    transform: translateX(-50%);
+    position: absolute;
+
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+    border-radius: 0px 0px 4px 4px;
+    background-color: rgb(48, 48, 48);
+}
+.custom-block-base > .grabber > svg {
+    width: 100%;
+    height: 100%;
+    fill: rgb(174, 174, 174);
+}
+
+.custom-block-base > .sizer {
+    left: 100%;
+    top: 100%;
+    transform: translate(-100%, -100%);
+    position: absolute;
+
+    width: 15px;
+    height: 15px;
+    border-radius: 7px;
+    cursor: nwse-resize;
+    background-image: linear-gradient(135deg, transparent 0%,
+    transparent 30%, black 30.1%,
+    black 35%, transparent 35.1%,
+
+    transparent 47%, black 47.1%,
+    black 56%, transparent 56.1%,
+
+    transparent 65%, black 65.1%,
+    black 75%, transparent 75.1%,
+
+    transparent 100%);
+}
+
+.custom-block-base > .input-side {
+    left: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    position: absolute;
+
+    width: 17px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: start;
+}
+
+.custom-block-base > .input-side > .block-input {
+    width: auto;
+    max-width: calc(var(--block-width) / 3) + 'px';
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    position: relative;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+.custom-block-base > .input-side > .block-input > .target-point {
+    width: 10px;
+    height: 10px;
+    background-color: rgb(177, 5, 5);
+    transform: rotateZ(45deg);
+    margin-right: 7px;
+}
+
+.custom-block-base > .input-side > .block-input > p {
+    margin: 0;
+    padding: 0;
+    color: black;
+    text-align: center;
+    font-size: large;
+}
+
+.custom-block-base > .output-side, block-input > .output-side {
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    position: absolute;
+
+    width: 17px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: end;
+}
+
+.custom-block-base > .output-side > .block-output, block-input > .output-side > .block-output {
+    width: auto;
+    max-width: calc(var(--block-width) / 3) + 'px';
+    height: fit-content;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-evenly;
+    position: relative;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+.custom-block-base > .output-side > .block-output > .target-point, block-input > .output-side > .block-output > .target-point {
+    width: 10px;
+    height: 10px;
+    background-color: rgb(0, 200, 0);
+    transform: rotateZ(45deg);
+    margin-left: 7px;
+}
+
+.custom-block-base > .output-side > .block-output > p, block-input > .output-side > .block-output > p {
+    margin: 0;
+    padding: 0;
+    color: black;
+    text-align: center;
+    font-size: large;
+}
+
+.custom-base-event {
+    position: absolute;
+    width: var(--block-width);
+    height: var(--block-height);
+    top: var(--block-pos-y);
+    left: var(--block-pos-x);
+    transform: rotateZ(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    background-color: rgb(43, 43, 43);
+}
+
+.custom-base-event > h2 {
+    margin: 0;
+    padding: 0;
+    color: white;
+    font-size: larger;
+    transform: rotateZ(-45deg);
+    white-space: nowrap;
+}
+
+.custom-base-event > .target-point {
+    width: 10px;
+    height: 10px;
+    background-color: rgb(177, 5, 5);
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+}
