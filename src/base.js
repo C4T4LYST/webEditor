@@ -355,10 +355,16 @@ class startBlock extends block {
         this.position = { x: positionX, y: positionY };
         this.size = { width: sizeX, height: sizeY };
         this._settedUp = true;
+        this._tunnelStart = null;
     }
 
     run() {
-
+        if(this._tunnelStart != null && this._tunnelStart.classList.contains('connected')) {
+            let nextBlock = getConnectedBlock(this._tunnelStart);
+            if(nextBlock != null) {
+                nextBlock.run();
+            }
+        }
     }
 
     connectedCallback() {
@@ -379,6 +385,7 @@ class startBlock extends block {
         let tunnelPoint = document.createElement('div');
         tunnelPoint.classList.add('tunnel-point');
         this.appendChild(tunnelPoint);
+        this._tunnelStart = tunnelPoint;
         addSegment(tunnelPoint);
     }
 }
@@ -449,6 +456,47 @@ class ioblock extends block {
 
         this._outputSide.classList.add('output-side');
         this.appendChild(this._outputSide);
+    }
+}
+
+class ioblockTimeLine extends ioblock {
+    constructor() {
+        super();
+        this._settedUp = false;
+    }
+    setUp(positionX, positionY, sizeX, sizeY) {
+        this.position = { x: positionX, y: positionY };
+        this.size = { width: sizeX, height: sizeY };
+        this._settedUp = true;
+        this._tunnelStart = null;
+        this._tunnelNext = null;
+    }
+
+    run() {
+        if(this._tunnelStart != null && this._tunnelStart.classList.contains('connected')) {
+            let nextBlock = getConnectedBlock(this._tunnelStart);
+            if(nextBlock != null) {
+                nextBlock.run();
+            }
+        }
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+
+        let fromTunnelPoint = document.createElement('div');
+        fromTunnelPoint.classList.add('tunnel-point');
+        fromTunnelPoint.classList.add('from-tunnel-point');
+        this.appendChild(fromTunnelPoint);
+        this._tunnelStart = fromTunnelPoint;
+        addSegment(fromTunnelPoint);
+
+        let toTunnelPoint = document.createElement('div');
+        toTunnelPoint.classList.add('tunnel-point');
+        toTunnelPoint.classList.add('to-tunnel-point');
+        this.appendChild(toTunnelPoint);
+        this._tunnelNext = toTunnelPoint;
+        addSegment(toTunnelPoint);
     }
 }
 

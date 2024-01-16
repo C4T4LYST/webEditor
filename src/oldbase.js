@@ -1,4 +1,4 @@
-/*
+
 function createLine(element1, element2) {
     var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
@@ -13,16 +13,16 @@ function createLine(element1, element2) {
     line.setAttribute('y2', element2.getBoundingClientRect().y + element2.getBoundingClientRect().height / 2);
 
     return line;
-}*//*
+}
 function resetLine() {
     document.getElementById('connectorLine').setAttribute('x1', 0);
     document.getElementById('connectorLine').setAttribute('y1', 0);
     document.getElementById('connectorLine').setAttribute('x2', 0);
     document.getElementById('connectorLine').setAttribute('y2', 0);
-}*/
+}
 
 //OLD
-/*
+
 class baseBlock extends HTMLElement{
     constructor(){
         super();
@@ -676,4 +676,4 @@ class baseEvent extends HTMLElement {
     }
 }
 
-customElements.define('base-event', baseEvent);*/
+customElements.define('base-event', baseEvent);
