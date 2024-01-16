@@ -24,6 +24,16 @@ html, body {
     background-image: url('background.png');
     background-size: 66px 66px;
 }
+
+.tunnel-point {
+    width: 10px;
+    height: 10px;
+    background-color: rgb(133, 133, 133);
+}
+.tunnel-point.connected {
+    background-color: green;
+}
+
 .io-block {
     position: absolute;
     width: var(--block-width);
@@ -126,6 +136,20 @@ html, body {
     background-color: green;
 }
 
+.timeline-block .from-tunnel-point {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    transform: rotateZ(45deg);
+}
+
+.timeline-block .to-tunnel-point {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    transform: rotateZ(45deg);
+}
+
 .event-block {
     position: absolute;
     width: var(--block-width);
@@ -141,16 +165,9 @@ html, body {
 }
 
 .event-block > .tunnel-point {
-    width: 10px;
-    height: 10px;
-    background-color: blue;
     position: absolute;
     right: 0px;
     bottom: 0px;
-}
-
-.tunnel-point.connected {
-    background-color: green;
 }
 
 .event-block > .grabber {

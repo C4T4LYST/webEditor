@@ -113,7 +113,8 @@ document.addEventListener('keydown', function(event) {
 });
 
 
-document.getElementById('Start', () => {
+document.getElementById('Start').addEventListener('click', () => {
+    console.log('Start');
     let StartEvents = document.querySelectorAll('start-event-block');
     if(StartEvents.length == 0) {
         throw new Error('No start event found');

@@ -26,7 +26,7 @@ function createGrabber(ParentElement, callbackOnMove) {
         }
     });
 
-    grabber.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', (e) => {
         if(dragging) {
             ParentElement.setPosition(e.clientX - dragOffset.x, e.clientY - dragOffset.y);
             if(callbackOnMove != undefined) {
@@ -35,7 +35,7 @@ function createGrabber(ParentElement, callbackOnMove) {
         }
     });
 
-    grabber.addEventListener('mouseup', (e) => {
+    document.addEventListener('mouseup', (e) => {
         dragging = false;
     });
     
@@ -59,110 +59,6 @@ function createLine(element1, position2, color) {
     return { line: line, svg: svg };
 }
 
-let tunnelSegments = [];
-let tunnelConnections = [];
-function addSegment(html) {
-    tunnelSegments.push(html);
-    let connected = false;
-    let grabbing = false;
-    let line = null;
-
-    let removeThis = () => {};
-
-    function mousedown(e) {
-        if(grabbing) return;
-
-        if(html.classList.contains('connected')) return removeThis();
-
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        grabbing = true;
-
-        line = createLine(html, { x: e.clientX, y: e.clientY }, 'blue');
-    }
-
-    function mousemove(e) {
-        if(!grabbing) return;
-
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-
-        var svgPoint = line.svg.createSVGPoint();
-        svgPoint.x = e.clientX;
-        svgPoint.y = e.clientY;
-        var newCoords = svgPoint.matrixTransform(line.svg.getScreenCTM().inverse());
-
-        line.line.setAttribute('x2', newCoords.x);
-        line.line.setAttribute('y2', newCoords.y);
-    }
-
-    function mouseup (e) {
-        if(!grabbing) return;
-
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        grabbing = false;
-
-        document.elementsFromPoint(e.clientX, e.clientY).forEach(element => {
-            if(element.classList.contains('tunnel-point') && element != html && !html.classList.contains('connected')
-                && !element.classList.contains('connected')) {
-
-                console.log('New connection!');
-
-                grabbing = false;
-                var svgPoint = line.svg.createSVGPoint();
-                svgPoint.x = element.getBoundingClientRect().x + element.getBoundingClientRect().width / 2;
-                svgPoint.y = element.getBoundingClientRect().y + element.getBoundingClientRect().height / 2;
-                var newCoords = svgPoint.matrixTransform(line.svg.getScreenCTM().inverse());
-                line.line.setAttribute('x2', newCoords.x);
-                line.line.setAttribute('y2', newCoords.y);
-
-                element.classList.add('connected');
-                html.classList.add('connected');
-
-                tunnelConnections.push({ from: html, to: element, line: line });
-            }
-        });
-
-        if(!html.classList.contains('connected')) {
-            document.getElementById('lines').removeChild(line.svg);
-            line = null;
-        }
-    }
-
-    html.addEventListener('mousedown', mousedown);
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
-
-    removeThis = () => {
-        if(html.classList.contains('connected')) {
-            let connection = tunnelConnections.find(connection => connection.from == html || connection.to == html);
-            connection.from.classList.remove('connected');
-            connection.to.classList.remove('connected');
-
-            document.getElementById('lines').removeChild(connection.line.svg);
-
-            tunnelConnections = tunnelConnections.filter(connection => connection.from != html && connection.to != html);
-            tunnelSegments = tunnelSegments.filter(segment => segment != html);
-        }
-    }
-}
-
-function updateTunnelSegments() {
-    tunnelSegments.forEach(segment => {
-        tunnelConnections.forEach(connection => {
-            if(connection.from == segment) {
-                connection.line.line.setAttribute('x1', segment.getBoundingClientRect().x + segment.getBoundingClientRect().width / 2);
-                connection.line.line.setAttribute('y1', segment.getBoundingClientRect().y + segment.getBoundingClientRect().height / 2);
-            }
-            if(connection.to == segment) {
-                connection.line.line.setAttribute('x2', segment.getBoundingClientRect().x + segment.getBoundingClientRect().width / 2);
-                connection.line.line.setAttribute('y2', segment.getBoundingClientRect().y + segment.getBoundingClientRect().height / 2);
-            }
-        });
-    });
-}
-
 let connectors = [];
 let connectedPoints = [];
 
@@ -170,6 +66,7 @@ let assocs = new Map();
 function getConnectedBlock(element) {
     let finded = null;
     connectedPoints.forEach(connection => {
+        console.log(connection);
         if(connection.from == element) {
             finded = connection.to;
             return;
@@ -183,9 +80,13 @@ function getConnectedBlock(element) {
     return assocs.get(finded);
 }
 
-function addConnector(html, type) {
+let colorOptions = {
+    'tunnel-point': 'grey',
+    'target-point': 'blue'
+}
+
+function addConnector(html, type, way) {
     connectors.push(html);
-    let connected = false;
     let grabbing = false;
     let line = null;
 
@@ -200,7 +101,7 @@ function addConnector(html, type) {
         e.stopImmediatePropagation();
         grabbing = true;
 
-        line = createLine(html, { x: e.clientX, y: e.clientY }, 'blue');
+        line = createLine(html, { x: e.clientX, y: e.clientY }, colorOptions[type]);
     }
 
     function mousemove(e) {
@@ -226,8 +127,8 @@ function addConnector(html, type) {
         grabbing = false;
 
         document.elementsFromPoint(e.clientX, e.clientY).forEach(element => {
-            if(element.classList.contains('target-point') && element != html && !html.classList.contains('connected')
-                && !element.classList.contains('connected')) {
+            if(element.classList.contains(type) && element != html && !html.classList.contains('connected')
+                && !element.classList.contains('connected') && !element.classList.contains(way)) {
 
                 console.log('New connection!');
 
@@ -259,6 +160,7 @@ function addConnector(html, type) {
     removeThis = () => {
         if(html.classList.contains('connected')) {
             let connection = connectedPoints.find(connection => connection.from == html || connection.to == html);
+            console.log('connection removed');
             connection.from.classList.remove('connected');
             connection.to.classList.remove('connected');
 
@@ -283,6 +185,11 @@ function updateConnectors() {
             }
         });
     });
+}
+
+function updateConnections() {
+    updateConnectors();
+    updateTunnelSegments();
 }
 
 class block extends HTMLElement{
@@ -352,8 +259,8 @@ class startBlock extends block {
         this._type = 'Start';
     }
     setUp(positionX, positionY, sizeX, sizeY) {
-        this.position = { x: positionX, y: positionY };
-        this.size = { width: sizeX, height: sizeY };
+        this.position = { x: positionX || 100, y: positionY || 100};
+        this.size = { width: sizeX || 100, height: sizeY || 100};
         this._settedUp = true;
         this._tunnelStart = null;
     }
@@ -361,6 +268,7 @@ class startBlock extends block {
     run() {
         if(this._tunnelStart != null && this._tunnelStart.classList.contains('connected')) {
             let nextBlock = getConnectedBlock(this._tunnelStart);
+            console.log(this, 'Points', nextBlock);
             if(nextBlock != null) {
                 nextBlock.run();
             }
@@ -374,7 +282,7 @@ class startBlock extends block {
             this.setUp(100, 100, 100, 100);
         }
 
-        let grabber = createGrabber(this, updateTunnelSegments);
+        let grabber = createGrabber(this, updateConnections);
         grabber.style.transform = 'rotateZ(-45deg)';
         this.appendChild(grabber);
 
@@ -386,7 +294,7 @@ class startBlock extends block {
         tunnelPoint.classList.add('tunnel-point');
         this.appendChild(tunnelPoint);
         this._tunnelStart = tunnelPoint;
-        addSegment(tunnelPoint);
+        addConnector(tunnelPoint, 'tunnel-point', 'output');
     }
 }
 customElements.define('start-event-block', startBlock);
@@ -419,7 +327,7 @@ class ioblock extends block {
 
         this._inputSide.appendChild(input);
         this._inputs.push({ name: name, element: targetPoint });
-        addConnector(targetPoint, 'input');
+        addConnector(targetPoint, 'target-point', 'input');
 
         assocs.set(targetPoint, this);
     }
@@ -439,7 +347,7 @@ class ioblock extends block {
 
         this._outputSide.appendChild(output);
         this._outputs.push({ name: name, element: targetPoint });
-        addConnector(targetPoint, 'output');
+        addConnector(targetPoint, 'target-point', 'output');
 
         assocs.set(targetPoint, this);
     }
@@ -448,7 +356,7 @@ class ioblock extends block {
         this.classList.add('io-block');
         this.classList.add('simple-block');
 
-        let grabber = createGrabber(this, updateConnectors);
+        let grabber = createGrabber(this, updateConnections);
         this.appendChild(grabber);
 
         this._inputSide.classList.add('input-side');
@@ -483,38 +391,39 @@ class ioblockTimeLine extends ioblock {
 
     connectedCallback() {
         super.connectedCallback();
+        this.classList.add('timeline-block')
 
         let fromTunnelPoint = document.createElement('div');
         fromTunnelPoint.classList.add('tunnel-point');
         fromTunnelPoint.classList.add('from-tunnel-point');
         this.appendChild(fromTunnelPoint);
         this._tunnelStart = fromTunnelPoint;
-        addSegment(fromTunnelPoint);
+        addConnector(fromTunnelPoint, 'tunnel-point', 'input');
 
         let toTunnelPoint = document.createElement('div');
         toTunnelPoint.classList.add('tunnel-point');
         toTunnelPoint.classList.add('to-tunnel-point');
         this.appendChild(toTunnelPoint);
         this._tunnelNext = toTunnelPoint;
-        addSegment(toTunnelPoint);
+        addConnector(toTunnelPoint, 'tunnel-point', 'output');
     }
 }
 
-class consoleLogBlock extends ioblock {
+class consoleLogBlock extends ioblockTimeLine {
     constructor() {
         super();
         this._settedUp = false;
     }
     setUp(positionX, positionY, sizeX, sizeY) {
-        this.position = { x: positionX, y: positionY };
-        this.size = { width: sizeX, height: sizeY };
+        this.position = { x: positionX || 100, y: positionY || 100};
+        this.size = { width: sizeX || 230, height: sizeY || 80};
         this._settedUp = true;
     }
 
     connectedCallback() {
         super.connectedCallback();
         if(!this._settedUp) {
-            this.setUp(100, 100, 230, 110);
+            this.setUp(100, 100, 230, 80);
         }
         
         let title = document.createElement('h2');
