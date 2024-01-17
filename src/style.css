@@ -34,6 +34,10 @@ html, body {
     background-color: green;
 }
 
+
+
+
+
 .io-block {
     position: absolute;
     width: var(--block-width);
@@ -92,7 +96,7 @@ html, body {
 .io-block > .input-side > .block-input > .target-point {
     width: 10px;
     height: 10px;
-    background-color: rgb(177, 5, 5);
+    background-color: rgb(113, 0, 0);
     transform: rotateZ(45deg);
     margin-right: 7px;
 }
@@ -120,7 +124,7 @@ html, body {
 .io-block > .output-side > .block-output > .target-point {
     width: 10px;
     height: 10px;
-    background-color: rgb(0, 184, 178);
+    background-color: rgb(113, 0, 0);
     transform: rotateZ(45deg);
     margin-left: 7px;
 }
@@ -134,6 +138,25 @@ html, body {
 }
 .target-point.connected{
     background-color: green;
+}
+
+.string-input-block {
+    align-items: start;
+    justify-content: center;
+    padding: 5px;
+}
+
+.string-input-block > input{
+    width: 70%;
+    left: 0px;
+    position: relative;
+    font-size: 15px;
+    border-radius: 5px;
+}
+
+.string-input-block > h2 {
+    width: 70%;
+    text-align: center;
 }
 
 .timeline-block .from-tunnel-point {
@@ -192,7 +215,8 @@ html, body {
     width: 40px;
     height: 20px;
     top: 0px;
-    /*left: 50%;*/
+    left: 50%;
+    transform: translateX(-50%);
     cursor: pointer;
     border-radius: 0px 0px 4px 4px;
     background-color: rgb(48, 48, 48);
@@ -300,7 +324,7 @@ html, body {
     overflow: visible;
 }
 
-.quickMenu .SearchBar .SearchResults {
+.SearchResults {
     position: absolute;
     top: 100%;
     left: 50%;
@@ -314,8 +338,29 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 10px 20px;
+
 }
 
-.quickMenu .SearchBar .SearchResults .SearchResult .selected {
-    background-color: #121212a3;
+.SearchResults p {
+    width: 100%;
+    height: auto;
+    background-color: transparent;
+    color: white;
+    border: none;
+    outline: none;
+    font-size: larger;
+    padding: 8px 10px;
+    overflow: visible;
+    cursor: pointer;
+    transition: .3s all;
+    margin: 0px;
 }
+
+.SearchResults p.selected {
+    background-color: #333333a3;
+}
+
+.SearchResults p:hover {
+    background-color: #474747a3;
+}
+

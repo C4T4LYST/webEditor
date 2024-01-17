@@ -42,7 +42,16 @@
         document.addEventListener('mousemove', updateLine);*/
     </script>
     <style>
-        
+        .Playground {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: min(600px, 100vw);
+            height: auto;
+            aspect-ratio: 16/9;
+            background-color: black;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -72,11 +81,15 @@
                 <line id="connectorLine" x1="0" y1="0" x2="0" y2="0"/>
             </svg>
         </div>
-        
+    </div>
+
+    <div class="Playground">
+
     </div>
 
     <script>
         let Editor = document.querySelector('.Editor');
+        let Playground = document.querySelector('.Playground');
         
 /*
         let EditorMoving = false;

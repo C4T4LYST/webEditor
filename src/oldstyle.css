@@ -1,3 +1,86 @@
+/* HTML: <div class="loader"></div> */
+.loader {
+    width: 50px;
+    aspect-ratio: 1.154;
+    position: relative;
+    background: conic-gradient(from 120deg at 50% 64%,#0000, #25b09b 1deg 120deg,#0000 121deg);
+    animation: l27-0 2s infinite cubic-bezier(0.3,1,0,1);
+  }
+  .loader:before,
+  .loader:after {
+    content:'';
+    position: absolute;
+    inset:0;
+    background:inherit;
+    transform-origin: 50% 66%;
+    animation: l27-1 2s infinite;
+  }
+  .loader:after {
+    --s:-1;
+  }
+  @keyframes l27-0 {
+     0%,30%      {transform: rotate(0)}
+     70%         {transform: rotate(120deg)}
+     70.01%,100% {transform: rotate(360deg)}
+  }
+  @keyframes l27-1 {
+     0%      {transform: rotate(calc(var(--s,1)*120deg)) translate(0)}
+     30%,70% {transform: rotate(calc(var(--s,1)*120deg)) translate(calc(var(--s,1)*-5px),10px)}
+     100%    {transform: rotate(calc(var(--s,1)*120deg)) translate(0)}
+  }
+  
+  /* HTML: <div class="loader"></div> */
+  .wtfEyes {
+    height: 30px;
+    aspect-ratio: 2;
+    display: grid;
+    background:
+      radial-gradient(farthest-side,#000 15%,#0000 18%)0 0/50% 100%,
+      radial-gradient(50% 100% at 50% 160%,#fff 95%,#0000) 0 0   /50% 50%,
+      radial-gradient(50% 100% at 50% -60%,#fff 95%,#0000) 0 100%/50% 50%;
+    background-repeat: repeat-x;
+    animation: l2 1.5s infinite linear;
+  }
+  @keyframes l2 {
+    0%,
+    15% {background-position:0   0,0 0,0 100%}
+    20%,
+    40% {background-position:5px 0,0 0,0 100%}
+    45%,
+    55% {background-position:0   0,0 0,0 100%}
+    60%,
+    80%{background-position:-5px 0,0 0,0 100%}
+    85%,
+    100% {background-position:0   0,0 0,0 100%}
+  }
+  
+  /* HTML: <div class="loader"></div> */
+  .ErrorEyes {
+    display: inline-flex;
+    gap: 10px;
+  }
+  .ErrorEyes:before,
+  .ErrorEyes:after {
+    content: "";
+    height: 20px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(farthest-side,#000 95%,#0000) 35% 35%/6px 6px no-repeat
+      #fff;
+    transform: scaleX(var(--s,1)) rotate(0deg);
+    animation: l6 1s infinite linear;
+  }
+  .ErrorEyes:after {
+    --s: -1;
+    animation-delay:-0.1s;
+  }
+  @keyframes l6 {
+    100% {transform:scaleX(var(--s,1)) rotate(360deg);}
+  }
+
+
+
 
 .custom-block-base {
     width: var(--block-width);

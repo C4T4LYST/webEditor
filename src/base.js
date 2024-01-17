@@ -65,28 +65,29 @@ let connectedPoints = [];
 let assocs = new Map();
 function getConnectedBlock(element) {
     let finded = null;
-    connectedPoints.forEach(connection => {
-        console.log(connection);
+    for(let inde in connectedPoints) {
+        let connection = connectedPoints[inde];
         if(connection.from == element) {
             finded = connection.to;
-            return;
+            break;
         }
         if(connection.to == element) {
             finded = connection.from;
-            return;
+            break;
         }
-    });
+    }
 
-    return assocs.get(finded);
+    return finded;
 }
 
 let colorOptions = {
     'tunnel-point': 'grey',
-    'target-point': 'blue'
+    'target-point': 'rgb(113, 0, 0)'
 }
 
-function addConnector(html, type, way) {
+function addConnector(html, parent, type, way) {
     connectors.push(html);
+    assocs.set(html, parent);
     let grabbing = false;
     let line = null;
 
@@ -189,7 +190,6 @@ function updateConnectors() {
 
 function updateConnections() {
     updateConnectors();
-    updateTunnelSegments();
 }
 
 class block extends HTMLElement{
@@ -197,20 +197,12 @@ class block extends HTMLElement{
         super();
 
         this._inited = false;
-        this._type = 'base';
         this._caller = null;
         this._callfor = null;
         this._targetPoints = [];
 
         this._position = { x: 0, y: 0 };
         this._size = { width: 0, height: 0 };
-    }
-
-    set type(value) {
-        this._type = value;
-    }
-    get type() {
-        return this._type;
     }
 
     set caller(value) {
@@ -252,58 +244,10 @@ class block extends HTMLElement{
     }
 }
 
-class startBlock extends block {
-    constructor() {
-        super();
-        this._settedUp = false;
-        this._type = 'Start';
-    }
-    setUp(positionX, positionY, sizeX, sizeY) {
-        this.position = { x: positionX || 100, y: positionY || 100};
-        this.size = { width: sizeX || 100, height: sizeY || 100};
-        this._settedUp = true;
-        this._tunnelStart = null;
-    }
-
-    run() {
-        if(this._tunnelStart != null && this._tunnelStart.classList.contains('connected')) {
-            let nextBlock = getConnectedBlock(this._tunnelStart);
-            console.log(this, 'Points', nextBlock);
-            if(nextBlock != null) {
-                nextBlock.run();
-            }
-        }
-    }
-
-    connectedCallback() {
-        this.classList.add('event-block');
-        this.classList.add('simple-block');
-        if(!this._settedUp) {
-            this.setUp(100, 100, 100, 100);
-        }
-
-        let grabber = createGrabber(this, updateConnections);
-        grabber.style.transform = 'rotateZ(-45deg)';
-        this.appendChild(grabber);
-
-        let title = document.createElement('h2');
-        title.innerText = 'Start';
-        this.appendChild(title);
-
-        let tunnelPoint = document.createElement('div');
-        tunnelPoint.classList.add('tunnel-point');
-        this.appendChild(tunnelPoint);
-        this._tunnelStart = tunnelPoint;
-        addConnector(tunnelPoint, 'tunnel-point', 'output');
-    }
-}
-customElements.define('start-event-block', startBlock);
-
 class ioblock extends block {
     constructor() {
         super();
         this._settedUp = false;
-        this._type = 'IO';
 
         this._inputs = [];
         this._outputs = [];
@@ -312,13 +256,14 @@ class ioblock extends block {
         this._outputSide = document.createElement('div');
     }
 
-    addInput(name) {
+    addInput(name, additionalTags) {
         let input = document.createElement('div');
         input.classList.add('block-input');
 
         let targetPoint = document.createElement('div');
         targetPoint.classList.add('target-point');
         targetPoint.classList.add('input');
+        additionalTags?.forEach(tag => targetPoint.classList.add(tag));
         input.appendChild(targetPoint);
 
         let tx = document.createElement('p');
@@ -327,18 +272,17 @@ class ioblock extends block {
 
         this._inputSide.appendChild(input);
         this._inputs.push({ name: name, element: targetPoint });
-        addConnector(targetPoint, 'target-point', 'input');
-
-        assocs.set(targetPoint, this);
+        addConnector(targetPoint, this, 'target-point', 'input');
     }
 
-    addOutput(name) {
+    addOutput(name, additionalTags) {
         let output = document.createElement('div');
         output.classList.add('block-output');
         
         let targetPoint = document.createElement('div');
         targetPoint.classList.add('target-point');
         targetPoint.classList.add('output');
+        additionalTags?.forEach(tag => targetPoint.classList.add(tag));
         output.appendChild(targetPoint);
 
         let tx = document.createElement('p');
@@ -347,9 +291,22 @@ class ioblock extends block {
 
         this._outputSide.appendChild(output);
         this._outputs.push({ name: name, element: targetPoint });
-        addConnector(targetPoint, 'target-point', 'output');
+        addConnector(targetPoint, this, 'target-point', 'output');
+    }
 
-        assocs.set(targetPoint, this);
+    getValue(name) {
+        let input = this._inputs.find(input => input.name == name);
+        if(input == undefined) return null;
+
+        let connected = connectedPoints.find(connection => connection.to == input.element);
+        if(connected == undefined) return null;
+
+        let block = getConnectedBlock(input.element);
+        if(block == null) return null;
+
+        let assocd = assocs.get(block);
+
+        return assocd.getValue('out');
     }
 
     connectedCallback() {
@@ -381,12 +338,16 @@ class ioblockTimeLine extends ioblock {
     }
 
     run() {
-        if(this._tunnelStart != null && this._tunnelStart.classList.contains('connected')) {
-            let nextBlock = getConnectedBlock(this._tunnelStart);
+        if(this._tunnelNext != null && this._tunnelNext.classList.contains('connected')) {
+            let nextBlock = getConnectedBlock(this._tunnelNext);
             if(nextBlock != null) {
                 nextBlock.run();
             }
         }
+    }
+
+    getValue(name) {
+        return super.getValue(name);
     }
 
     connectedCallback() {
@@ -398,14 +359,14 @@ class ioblockTimeLine extends ioblock {
         fromTunnelPoint.classList.add('from-tunnel-point');
         this.appendChild(fromTunnelPoint);
         this._tunnelStart = fromTunnelPoint;
-        addConnector(fromTunnelPoint, 'tunnel-point', 'input');
+        addConnector(fromTunnelPoint, this, 'tunnel-point', 'input');
 
         let toTunnelPoint = document.createElement('div');
         toTunnelPoint.classList.add('tunnel-point');
         toTunnelPoint.classList.add('to-tunnel-point');
         this.appendChild(toTunnelPoint);
         this._tunnelNext = toTunnelPoint;
-        addConnector(toTunnelPoint, 'tunnel-point', 'output');
+        addConnector(toTunnelPoint, this, 'tunnel-point', 'output');
     }
 }
 
@@ -418,6 +379,12 @@ class consoleLogBlock extends ioblockTimeLine {
         this.position = { x: positionX || 100, y: positionY || 100};
         this.size = { width: sizeX || 230, height: sizeY || 80};
         this._settedUp = true;
+    }
+
+    run() {
+        let value = super.getValue('text');
+        console.log(value);
+        super.run();
     }
 
     connectedCallback() {
@@ -442,28 +409,98 @@ class stringInputBlock extends ioblock {
         this._settedUp = false;
     }
     setUp(positionX, positionY, sizeX, sizeY) {
-        this.position = { x: positionX, y: positionY };
-        this.size = { width: sizeX, height: sizeY };
+        this.position = { x: positionX || 100, y: positionY || 100};
+        this.size = { width: sizeX || 180, height: sizeY || 100 };
         this._settedUp = true;
+        this._htm = document.createElement('input');
+        this._value = '';
+    }
+
+    getValue(name) {
+        return this._value;
+    }
+
+    set value(value) {
+        this._value = value;
+        this._htm.value = value;
+    }
+
+    get value() {
+        return this._value;
     }
 
     connectedCallback() {
         super.connectedCallback();
+        this.classList.add('string-input-block');
         if(!this._settedUp) {
-            this.setUp(100, 100, 230, 110);
+            this.setUp(100, 100, 230, 100);
         }
         
         let title = document.createElement('h2');
         title.innerText = 'String Input';
         this.appendChild(title);
 
-        let inputBox = document.createElement('input');
-        inputBox.type = 'text';
-        inputBox.placeholder = 'Text';
-        this.appendChild(inputBox);
+        
+        this._htm.type = 'text';
+        this._htm.placeholder = 'Text';
+        this.appendChild(this._htm);
+
+        this._htm.addEventListener('change', () => {
+            this._value = this._htm.value;
+        });
 
         this.addOutput('out');
     }
-
 }
+
 customElements.define('string-input-block', stringInputBlock);
+
+class createElementBlock extends ioblock {
+    constructor() {
+        super();
+        this._settedUp = false;
+    }
+    setUp(positionX, positionY, sizeX, sizeY) {
+        this.position = { x: positionX || 100, y: positionY || 100};
+        this.size = { width: sizeX || 180, height: sizeY || 100 };
+        this._settedUp = true;
+        this._htm = document.createElement('input');
+        this._value = '';
+    }
+
+    getValue(name) {
+        return this._value;
+    }
+
+    set value(value) {
+        this._value = value;
+        this._htm.value = value;
+    }
+
+    get value() {
+        return this._value;
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        this.classList.add('string-input-block');
+        if(!this._settedUp) {
+            this.setUp(100, 100, 230, 100);
+        }
+        
+        let title = document.createElement('h2');
+        title.innerText = 'Create Element';
+        this.appendChild(title);
+
+        
+        this._htm.type = 'text';
+        this._htm.placeholder = 'type';
+        this.appendChild(this._htm);
+
+        this._htm.addEventListener('change', () => {
+            this._value = this._htm.value;
+        });
+
+        this.addOutput('out');
+    }
+}

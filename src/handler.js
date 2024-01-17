@@ -5,11 +5,10 @@ let quickMenu = document.getElementById('quickMenu');
 let quickMenuSearchBar = document.getElementById('searchBar'); 
 let quickMenuSearchResults = document.getElementById('SearchResults');
 
-
-
 function updateSearch(input) {
     input = input.toLowerCase();
-    //srach for 1/1 match inputs
+    let resultZero = searchBarOptions.filter(option => option.displayName.startsWith(input));
+    //search for 1/1 match inputs
     let resultFirst = searchBarOptions.filter(option => option.displayName === input);
     //search for partial match inputs
     let resultSecond = searchBarOptions.filter(option => option.displayName.includes(input));
@@ -29,7 +28,7 @@ function updateSearch(input) {
         return {displayName: option.displayName, searchFunction: option.searchFunction, matchesCount: matchesCount};
     }).sort((a, b) => b.matchesCount - a.matchesCount).filter(option => option.matchesCount > 0);
 
-    let results = [...resultFirst, ...resultSecond, ...resultsThird];
+    let results = [...resultZero, ...resultFirst, ...resultSecond, ...resultsThird];
 
     let inListAlready = [];
     results = results.filter(result => {
@@ -48,7 +47,7 @@ function updateSearch(input) {
     quickMenuSearchResults.innerHTML = '';
     searchResults = [];
 
-    results.forEach(result => {
+    results.forEach((result, index) => {
         let resultElement = document.createElement('p');
         resultElement.classList.add('searchResult');
         resultElement.innerText = result.displayName;
@@ -56,6 +55,10 @@ function updateSearch(input) {
             result.searchFunction();
             hideQuickMenu();
         });
+
+        if(index === 0) {
+            resultElement.classList.add('selected');
+        }
 
         quickMenuSearchResults.appendChild(resultElement);
         searchResults.push(resultElement);
@@ -122,6 +125,8 @@ document.getElementById('Start').addEventListener('click', () => {
     else if(StartEvents.length > 1) {
         console.error('Multiple start events found');
     }
+
+    Playground.innerHTML = '';
 
     Array.from(StartEvents).forEach(StartEvent => {
         StartEvent.run();

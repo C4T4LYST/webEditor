@@ -22,6 +22,7 @@ addSearchOption('Create string input', () => {
     Editor.appendChild(stringInput);
 });
 
+let af = null;
 addSearchOption('template', () => { 
     let startEvent = document.createElement('start-event-block');
     startEvent.setUp(100, 100);
@@ -34,4 +35,11 @@ addSearchOption('template', () => {
     let consoleLog1 = document.createElement('console-log-block');
     consoleLog1.setUp(550, 220);
     Editor.appendChild(consoleLog1);
+
+    let stringInput = document.createElement('string-input-block');
+    stringInput.setUp(60, 400);
+    Editor.appendChild(stringInput);
+
+
+    af = stringInput;
 });
