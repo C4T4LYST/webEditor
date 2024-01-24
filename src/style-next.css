@@ -1,0 +1,84 @@
+
+.event-block {
+    position: absolute;
+    width: var(--block-width);
+    height: var(--block-height);
+    top: var(--block-pos-y);
+    left: var(--block-pos-x);
+    transform: rotateZ(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    background-color: rgb(43, 43, 43);
+}
+
+.event-block > .tunnel-point {
+    width: var(--target-point-width);
+    height: var(--target-point-height);
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    transition: .3s all;
+    background-color: var(--tunnel-point-base);
+}
+
+.event-block > .tunnel-point:hover {
+    background-color: var(--tunnel-point-hover);
+}
+
+.event-block > .grabber {
+    top: 10px;
+    left: 0px;
+    transform: rotateZ(-45deg);
+}
+
+.event-block > h2 {
+    margin: 0;
+    padding: 0;
+    color: white;
+    font-size: larger;
+    white-space: nowrap;
+    width: fit-content;
+    transform: rotateZ(-45deg);
+}
+
+.line.data {
+    background-color: var(--target-point-base);
+}
+.line.timeline {
+    background-color: var(--tunnel-point-base);
+}
+
+.mouse-move-event-block > .tunnel-point {
+    bottom: 30%;
+}
+.mouse-move-event-block > .data-point {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+    background-color: var(--data-point-base);
+    width: var(--target-point-width);
+    height: var(--target-point-height);
+}
+
+.string-input-block {
+    align-items: start !important;
+    justify-content: center;
+    padding: 5px;
+}
+
+.string-input-block > input{
+    width: 70%;
+    left: 0px;
+    position: relative;
+    font-size: 15px;
+    border-radius: 5px;
+}
+
+.string-input-block > h2 {
+    margin: 0;
+    padding: 0;
+    font-size: larger;
+    white-space: nowrap;
+}

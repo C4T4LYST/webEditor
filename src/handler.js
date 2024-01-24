@@ -28,8 +28,17 @@ function updateSearch(input) {
         return {displayName: option.displayName, searchFunction: option.searchFunction, matchesCount: matchesCount};
     }).sort((a, b) => b.matchesCount - a.matchesCount).filter(option => option.matchesCount > 0);
 
-    let results = [...resultZero, ...resultFirst, ...resultSecond, ...resultsThird];
+    let resultDef = [];
+    if(input === '') {
+        searchBarOptions.forEach(option => {
+            resultDef.push(option);
+        });
+    }
 
+    let results = [...resultDef, ...resultZero, ...resultFirst, ...resultSecond, ...resultsThird];
+
+    
+    
     let inListAlready = [];
     results = results.filter(result => {
         if (inListAlready.includes(result.displayName)) {
@@ -46,6 +55,8 @@ function updateSearch(input) {
 
     quickMenuSearchResults.innerHTML = '';
     searchResults = [];
+
+    
 
     results.forEach((result, index) => {
         let resultElement = document.createElement('p');
@@ -112,6 +123,7 @@ document.addEventListener('keydown', function(event) {
     if (event.altKey && event.key === 'x') {
         showQuickMenu();
         quickMenuSearchBar.focus();
+        quickMenuSearchBar.dispatchEvent(new KeyboardEvent('keydown', {key: '', altKey: false}));
     }
 });
 
@@ -135,3 +147,52 @@ document.getElementById('Start').addEventListener('click', () => {
 ////////////////////////////////////////////////////////
 });
 
+let _importedBlocks = [];
+
+fetch('/blocks').then(response => response.json()).then(needToImportBlocks => {
+    console.log('CURRENT IMPORT MAP');
+    _importedBlocks = needToImportBlocks;
+    console.log(needToImportBlocks.join('\n'));
+    
+    let indexPointer = 0;
+    function importBlock() {
+        let script = document.createElement('script');
+        script.src = _importedBlocks[indexPointer];
+        script.onload = () => {
+            indexPointer++;
+            if(indexPointer < _importedBlocks.length) {
+                importBlock();
+            }
+        };
+        document.head.appendChild(script);
+    }
+    importBlock();
+});
+
+fetch('/styles').then(response => response.json()).then(needToImportBlocks => {
+    needToImportBlocks.forEach(block => {
+        let style = document.createElement('link');
+        style.rel = 'stylesheet';
+        style.href = block;
+        document.head.appendChild(style);
+    });
+});
+
+setInterval(() => {
+    fetch('/blocks').then(response => response.json()).then(needToImportBlocks => {
+        let newOne = false;
+        needToImportBlocks.forEach(block => {
+            if(!_importedBlocks.includes(block)) {
+                newOne = true;
+                let script = document.createElement('script');
+                script.src = block;
+                document.head.appendChild(script);
+                _importedBlocks.push(block);
+            }
+        });
+        if(newOne) {
+            console.log('NEW IMPORT MAP');
+            console.log(needToImportBlocks.join('\n'));
+        }
+    });
+}, 1000);

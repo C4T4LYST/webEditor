@@ -7,9 +7,33 @@ function addSearchOption(displayName, searchFunction) {
     searchBarOptions.push({displayName: displayName.toLowerCase(), searchFunction: searchFunction});
 }
 
+addSearchOption('template0', () => {
+
+    let afg = document.createElement('event-mousemove');
+    Editor.appendChild(afg);
+
+    let strIn = document.createElement('string-input-block');
+    Editor.appendChild(strIn);
+    strIn.setPosition(70, 300);
+
+    let gfk = document.createElement('console-log-block');
+    gfk.setPosition(300, 250);
+    Editor.appendChild(gfk);
+
+    let startEvent = document.createElement('start-event-block');
+    startEvent.setPosition(300, 100);
+    Editor.appendChild(startEvent);
+
+});
+
 addSearchOption('Create Start event', () => {
     let startEvent = document.createElement('start-event-block');
     Editor.appendChild(startEvent);
+});
+
+addSearchOption('Create String input', () => {
+    let stringInput = document.createElement('string-input-block');
+    Editor.appendChild(stringInput);
 });
 
 addSearchOption('Create Console log', () => {
@@ -17,29 +41,7 @@ addSearchOption('Create Console log', () => {
     Editor.appendChild(consoleLog);
 });
 
-addSearchOption('Create string input', () => {
-    let stringInput = document.createElement('string-input-block');
-    Editor.appendChild(stringInput);
-});
-
-let af = null;
-addSearchOption('template', () => { 
-    let startEvent = document.createElement('start-event-block');
-    startEvent.setUp(100, 100);
-    Editor.appendChild(startEvent);
-
-    let consoloeLog0 = document.createElement('console-log-block');
-    consoloeLog0.setUp(250, 220);
-    Editor.appendChild(consoloeLog0);
-
-    let consoleLog1 = document.createElement('console-log-block');
-    consoleLog1.setUp(550, 220);
-    Editor.appendChild(consoleLog1);
-
-    let stringInput = document.createElement('string-input-block');
-    stringInput.setUp(60, 400);
-    Editor.appendChild(stringInput);
-
-
-    af = stringInput;
+addSearchOption('Create onMouseMovEvent', () => {
+    let onMouseMove = document.createElement('event-mousemove');
+    Editor.appendChild(onMouseMove);
 });

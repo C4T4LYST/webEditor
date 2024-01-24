@@ -1,0 +1,129 @@
+.io-block {
+    position: absolute;
+    width: var(--block-width);
+    height: var(--block-height);
+    top: var(--block-pos-y);
+    left: var(--block-pos-x);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    background-color: rgb(43, 43, 43);
+}
+
+.io-block > h2 {
+    color: #fff;
+    width: fit-content;
+    font-size: larger;
+    text-align: center;
+}
+
+.io-block > .input-side {
+    left: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    position: absolute;
+
+    width: 17px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: start;
+}
+
+.io-block > .output-side {
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    position: absolute;
+
+    width: 17px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: end;
+}
+
+
+
+.io-block > .input-side > .block-input {
+    width: auto;
+    max-width: calc(var(--block-width) / 3) + 'px';
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    position: relative;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+
+.io-block > .output-side > .block-output {
+    width: auto;
+    max-width: calc(var(--block-width) / 3) + 'px';
+    height: fit-content;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-evenly;
+    position: relative;
+    align-items: center;
+    padding: 2px 4px;
+}
+
+.io-block > .input-side > .block-input > p, .io-block > .output-side > .block-output > p  {
+    margin: 0;
+    padding: 0;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    font-size: large;
+}
+
+.io-block > .input-side > .block-input > .target-point, .io-block > .output-side > .block-output > .target-point {
+    width: 10px;
+    height: 10px;
+    background-color: var(--data-point-base);
+    transform: rotateZ(45deg);
+}
+
+.io-block > .input-side > .block-input:hover > .target-point, .io-block > .output-side > .block-output > .target-point:hover {
+    background-color: var(--data-point-hover);
+}
+
+.io-block > .input-side > .block-input > .target-point {
+    margin-right: 7px;
+}
+.io-block > .output-side > .block-output > .target-point {
+    margin-left: 7px;
+}
+
+.timeline-block > .from-tunnel-point, .timeline-block > .to-tunnel-point {
+    width: 10px;
+    height: 10px;
+    background-color: var(--tunnel-point-base);
+    transform: rotateZ(45deg);
+
+    position: absolute;
+    top: 5px;
+}
+
+.timeline-block > .from-tunnel-point:hover, .timeline-block > .to-tunnel-point:hover {
+    background-color: var(--tunnel-point-hover);
+}
+
+.timeline-block > .from-tunnel-point {
+    left: 5px;
+}
+
+.timeline-block .to-tunnel-point {
+    right: 5px;
+}
+
+.target-point.connected {
+    background-color: green !important;
+}
+
+
