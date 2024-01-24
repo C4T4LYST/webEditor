@@ -24,7 +24,7 @@ class eventMouseMove extends EventDataStartBlock {
     }
 
     run() {
-        if(this._tunnelNext._connectedTo == null) return console.error('No next block CompileTimeError', this);
+        if(this._tunnelNext._connectedTo == null) return;
 
         this._tunnelNext._connectedTo._parent.run();
     }

@@ -150,9 +150,7 @@ document.getElementById('Start').addEventListener('click', () => {
 let _importedBlocks = [];
 
 fetch('/blocks').then(response => response.json()).then(needToImportBlocks => {
-    console.log('CURRENT IMPORT MAP');
     _importedBlocks = needToImportBlocks;
-    console.log(needToImportBlocks.join('\n'));
     
     let indexPointer = 0;
     function importBlock() {
@@ -163,11 +161,25 @@ fetch('/blocks').then(response => response.json()).then(needToImportBlocks => {
             if(indexPointer < _importedBlocks.length) {
                 importBlock();
             }
+            
+            if(indexPointer == _importedBlocks.length) {
+                importFirdtPartyBlocks();
+            }
         };
         document.head.appendChild(script);
     }
     importBlock();
 });
+
+function importFirdtPartyBlocks() {
+    fetch('/fpBlocks').then(response => response.json()).then(needToImportBlocks => {
+        needToImportBlocks.forEach(block => {
+            let script = document.createElement('script');
+            script.src = block;
+            document.head.appendChild(script);
+        });
+    });
+}
 
 fetch('/styles').then(response => response.json()).then(needToImportBlocks => {
     needToImportBlocks.forEach(block => {

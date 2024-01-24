@@ -8,20 +8,23 @@ function addSearchOption(displayName, searchFunction) {
 }
 
 addSearchOption('template0', () => {
-
     let afg = document.createElement('event-mousemove');
     Editor.appendChild(afg);
 
+    let dsse = document.createElement('object-simple-deserializer'); 
+    dsse.setPosition(250, 230);
+    Editor.appendChild(dsse);
+
     let strIn = document.createElement('string-input-block');
     Editor.appendChild(strIn);
-    strIn.setPosition(70, 300);
+    strIn.setPosition(0, 260);
 
     let gfk = document.createElement('console-log-block');
-    gfk.setPosition(300, 250);
+    gfk.setPosition(420, 200);
     Editor.appendChild(gfk);
 
     let startEvent = document.createElement('start-event-block');
-    startEvent.setPosition(300, 100);
+    startEvent.setPosition(100, 500);
     Editor.appendChild(startEvent);
 
 });
@@ -44,4 +47,9 @@ addSearchOption('Create Console log', () => {
 addSearchOption('Create onMouseMovEvent', () => {
     let onMouseMove = document.createElement('event-mousemove');
     Editor.appendChild(onMouseMove);
+});
+
+addSearchOption('Create Object deserializer', () => {
+    let objDeserializer = document.createElement('object-simple-deserializer');
+    Editor.appendChild(objDeserializer);
 });

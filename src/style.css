@@ -13,8 +13,8 @@
 
     --data-point-base: #710000;
     --data-point-hover: #5a0000;
-    --tunnel-point-base: #535353;
-    --tunnel-point-hover: #474747a3;
+    --tunnel-point-base: #a7a7a7; /*#535353;*/
+    --tunnel-point-hover: #616161; /*#474747a3;*/
 
     --target-point-connected: green;
 

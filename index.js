@@ -32,6 +32,17 @@ app.get('/blocks', (req, res) => {
     res.send(availableBlocks);
 });
 
+app.get('/fpBlocks', (req, res) => {
+    let availableBlocks = [];
+    fs.readdirSync('./src/fpBlocks').forEach(file => {
+        if(fs.readFileSync('./src/fpBlocks/' + file, 'utf8').startsWith('//hidden') == false){
+            availableBlocks.push('/fpBlocks/' + file);
+        }
+    });
+
+    res.send(availableBlocks);
+});
+
 app.get('/styles', (req, res) => {
     let availableBlocks = [];
     fs.readdirSync('./src/styles').forEach(file => {

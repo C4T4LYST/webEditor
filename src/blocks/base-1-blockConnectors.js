@@ -37,6 +37,7 @@ class targetPointCodeBlock extends HTMLElement {
         this._parent = parent;
         this._way = way;
         this._type = type;
+        this.title = type;
         this._mode = mode;
         if(mode == 'multi') {
             this._connectedTo = [];
