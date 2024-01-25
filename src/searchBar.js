@@ -20,13 +20,16 @@ addSearchOption('template0', () => {
     strIn.setPosition(0, 260);
 
     let gfk = document.createElement('console-log-block');
-    gfk.setPosition(420, 200);
+    gfk.setPosition(800, 200);
     Editor.appendChild(gfk);
 
-    let startEvent = document.createElement('start-event-block');
-    startEvent.setPosition(100, 500);
-    Editor.appendChild(startEvent);
+    let extender = document.createElement('extender-simple-block');
+    extender.setPosition(660, 280);
+    Editor.appendChild(extender);
 
+    let ObjectModifier = document.createElement('object-simple-modifyer');
+    ObjectModifier.setPosition(460, 200);
+    Editor.appendChild(ObjectModifier);
 });
 
 addSearchOption('Create Start event', () => {

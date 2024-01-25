@@ -1,4 +1,4 @@
-class ObjectDeserializer extends ioblockTimeLine {
+class ObjectModifyer extends ioblockTimeLine {
     constructor() {
         super();
     }
@@ -18,4 +18,4 @@ class ObjectDeserializer extends ioblockTimeLine {
     }
 }
 
-customElements.define('object-simple-modifyer', ObjectDeserializer);
+customElements.define('object-simple-modifyer', ObjectModifyer);
